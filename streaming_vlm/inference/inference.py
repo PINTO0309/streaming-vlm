@@ -8,15 +8,25 @@ Run example:
         --video_path demo/sources/howto_fix_laptop_mute_1080p.mp4 \
         --output_dir generated_subtitles.vtt
 """
-import torch, functools, os, argparse
+import argparse
+import os
+import sys
+from pathlib import Path
+import functools
+import torch
 from transformers import Qwen2_5_VLForConditionalGeneration, Qwen2VLForConditionalGeneration, Qwen2_5_VLProcessor, Qwen2VLProcessor, AutoProcessor
+# Allow running as a script from the repo root without installing the package.
+if __package__ is None and __name__ == "__main__":
+    repo_root = Path(__file__).resolve().parents[2]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
 from streaming_vlm.inference.streaming_args import StreamingArgs
 from streaming_vlm.utils.get_qwen_range import *
 from qwen_vl_utils.vision_process import (
     FORCE_QWENVL_VIDEO_READER, VIDEO_TOTAL_PIXELS, FPS_MAX_FRAMES, VIDEO_MIN_PIXELS, VIDEO_MAX_PIXELS, FRAME_FACTOR, IMAGE_FACTOR, FPS,
     smart_nframes, smart_resize
 )
-import sys
 import json
 from streaming_vlm.inference.qwen2_5.patch_model import convert_qwen2_5_to_streaming
 from streaming_vlm.inference.qwen2.patch_model import convert_qwen2_to_streaming
