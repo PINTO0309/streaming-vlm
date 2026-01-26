@@ -32,12 +32,16 @@ uv sync --extra infer --extra sft # base + infer + sft environment
 source .venv/bin/activate
 ```
 
+<details><summary>legacy</summary>
+
 ```bash
 ./scripts/env_infer.sh
 ./scripts/env_sft.sh
 ```
 
 *You can set up the environment by running the scripts above.*
+
+</details>
 
 ## 🚀 Inference
 
@@ -48,9 +52,17 @@ source .venv/bin/activate
 *You can run inference by the command below.*
 
 ```bash
+uv run python streaming_vlm/inference/inference.py
+```
+
+<details><summary>legacy</summary>
+
+```bash
 conda activate streamingvlm-infer
 python streaming_vlm/inference/inference.py
 ```
+
+</details>
 
 ## 📚 SFT
 

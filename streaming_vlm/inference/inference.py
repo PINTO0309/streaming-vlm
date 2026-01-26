@@ -20,9 +20,9 @@ import sys
 import json
 from streaming_vlm.inference.qwen2_5.patch_model import convert_qwen2_5_to_streaming
 from streaming_vlm.inference.qwen2.patch_model import convert_qwen2_to_streaming
-from contextlib import contextmanager          
+from contextlib import contextmanager
 from transformers import set_seed
-set_seed(42)   
+set_seed(42)
 from streaming_vlm.data.lmm_dataset import LMMDataset
 from livecc_utils import  get_smart_resized_video_reader
 from livecc_utils.video_process_patch import _read_video_decord_plus, _spatial_resize_video
@@ -101,7 +101,7 @@ def process_past_kv(past_key_values, i, text_round, visual_round, full_conversat
             # Move from src_start_idx..src_end_idx to after dst_idx
             assert  dst_idx < src_start_idx <= src_end_idx
             input_ids = torch.cat([input_ids[:,:dst_idx+1], input_ids[:,src_start_idx:src_end_idx+1], input_ids[:,dst_idx+1:src_start_idx], input_ids[:,src_end_idx+1:]],dim=1)
-            
+
             for i, (k_layer, v_layer) in enumerate(past_key_values):
                 past_key_values.key_cache[i] = torch.cat([k_layer[:,:,:dst_idx+1], k_layer[:,:,src_start_idx:src_end_idx+1], k_layer[:,:,dst_idx+1:src_start_idx], k_layer[:,:,src_end_idx+1:]],dim=2)
                 past_key_values.value_cache[i] = torch.cat([v_layer[:,:,:dst_idx+1], v_layer[:,:,src_start_idx:src_end_idx+1], v_layer[:,:,dst_idx+1:src_start_idx], v_layer[:,:,src_end_idx+1:]],dim=2)
@@ -125,7 +125,7 @@ def process_past_kv(past_key_values, i, text_round, visual_round, full_conversat
             if item['type'] == 'text':
                 del full_conversation_history[-2*text_round]['content'][k] # In livecc format, the first text is "time xx-xx"; just delete the first one to avoid removing the first query
                 break
-        
+
         del full_conversation_history[-(2*text_round-1)]
         if visual_round > text_round:
             # If more visual rounds are kept than text rounds, delete this text round separately;
@@ -149,17 +149,17 @@ def process_past_kv(past_key_values, i, text_round, visual_round, full_conversat
                 full_conversation_history[1]['content'] = [item for item in full_conversation_history[1]['content'] if item['type']!='video']
             else:
                 full_conversation_history[-2*visual_round]['content'] = [item for item in full_conversation_history[-2*visual_round]['content'] if item['type']!='video']
-            
+
             video_token_start_index, video_token_end_index = get_qwen_range(prev_generated_ids, 'vision', 0)
             prev_generated_ids, past_key_values = prune_id_and_kv_cache(prev_generated_ids, past_key_values, video_token_start_index, video_token_end_index)
-    
+
     if i >= max(visual_round,text_round):
         # If both the vision and text of this round have been deleted, then delete the entire block
         del full_conversation_history[1]
         user_start_idx, user_end_idx = get_qwen_range(prev_generated_ids, 'user', 0)
         prev_generated_ids, past_key_values = prune_id_and_kv_cache(prev_generated_ids, past_key_values, user_start_idx, user_end_idx)
 
-    if i > 0: 
+    if i > 0:
         if text_sink is not None or text_sliding_window is not None:
             previous_text_start_idx, previous_text_end_idx = get_qwen_range(prev_generated_ids, 'previous text', 0)
             cut_start_idx = previous_text_start_idx + text_sink + 4 if text_sink is not None else previous_text_start_idx
@@ -168,28 +168,28 @@ def process_past_kv(past_key_values, i, text_round, visual_round, full_conversat
             if cut_start_idx <= cut_end_idx:
                 prev_generated_ids, past_key_values = prune_id_and_kv_cache(prev_generated_ids, past_key_values, cut_start_idx, cut_end_idx)
         prev_generated_ids, past_key_values = contiguous_id_and_kv(prev_generated_ids, past_key_values)
-    
+
     return past_key_values, prev_generated_ids, recent_video_window_clips, recent_pixel_values_videos
 
-def printq(*args, quiet=False, **kwargs): 
-    """Use like print; when quiet=True, suppress output.""" 
-    if not quiet: 
+def printq(*args, quiet=False, **kwargs):
+    """Use like print; when quiet=True, suppress output."""
+    if not quiet:
         print(*args, **kwargs)
 # -----------------------------------------------------------------
 # Main logic
 # -----------------------------------------------------------------
-def streaming_inference(model_path="", 
-                        video_path="", output_dir=None, 
+def streaming_inference(model_path="",
+                        video_path="", output_dir=None,
                         model_base = 'Qwen2_5',
                         model = None,
                         processor = None,
-                        window_size = DEFAULT_WINDOW_SIZE, 
-                        chunk_duration = DEFAULT_CHUNK_DURATION, 
-                        text_round = DEFAULT_TEXT_ROUND, 
-                        previous_text = "", 
-                        test_data_json = None, 
-                        test_data_idx = None, 
-                        pos_mode = "shrink", 
+                        window_size = DEFAULT_WINDOW_SIZE,
+                        chunk_duration = DEFAULT_CHUNK_DURATION,
+                        text_round = DEFAULT_TEXT_ROUND,
+                        previous_text = "",
+                        test_data_json = None,
+                        test_data_idx = None,
+                        pos_mode = "shrink",
                         all_text = False, # All PEs are 1D to adapt to livecc's buggy training code
                         skip_first_chunk = 0,
                         recompute = False,
@@ -204,7 +204,7 @@ def streaming_inference(model_path="",
                         quiet=False,
                         emit_json=False,
                         time_test = False,
-                        ): 
+                        ):
     def _sync():
         if torch.cuda.is_available():
             torch.cuda.synchronize()
@@ -219,12 +219,12 @@ def streaming_inference(model_path="",
 
     if model is None or processor is None:
         model, processor = load_model_and_processor(model_path, model_base)
-    else: 
+    else:
         if model_base == 'Qwen2_5':
             model = convert_qwen2_5_to_streaming(model)
         elif model_base == 'Qwen2':
             model = convert_qwen2_to_streaming(model)
-    
+
     assistant_start_bias = len(processor(text="<|im_start|>assistant\n")['input_ids'][0])
     assistant_end_bias = len(processor(text=" ...<|im_end|>")['input_ids'][0])
 
@@ -237,8 +237,8 @@ def streaming_inference(model_path="",
                 if i == gt_idx:
                     gt_dict = json.loads(line)
                     break
-    
-                # f[gt_idx] 
+
+                # f[gt_idx]
     # Load from dataset #########################################################
     from_dataset = False
     if test_data_json is not None:
@@ -246,7 +246,7 @@ def streaming_inference(model_path="",
         dataset = LMMDataset(
             annotation_paths=[
                test_data_json
-            ], 
+            ],
             processor=processor, # Pass in the initialized processor
             with_context=False, # Do not use context
             return_conversation=True,
@@ -298,7 +298,7 @@ def streaming_inference(model_path="",
     full_conversation_history = []
     prev_generated_ids = None  # Position embeddings must be recomputed every round, so we must keep this
     recent_video_window_clips = [] # Qwen: video before passing through the vision tower
-    recent_pixel_values_videos = [] # 
+    recent_pixel_values_videos = [] #
     num_chunks = int((duration + chunk_duration - 1) // chunk_duration)
 
     responses = []
@@ -310,18 +310,18 @@ def streaming_inference(model_path="",
         _sync()
         loop_start = time.perf_counter()
         section_time = {k: 0.0 for k in ['PKV', 'CHECK', 'VIDEO', 'INPUT', 'GEN', 'POST']}
-    
-        start_time = (i + skip_first_chunk) * chunk_duration 
+
+        start_time = (i + skip_first_chunk) * chunk_duration
 
         ########################## Handle past_key_values ###################################
         _sync(); _t = time.perf_counter()
 
-        past_key_values, prev_generated_ids, recent_video_window_clips, recent_pixel_values_videos = process_past_kv(past_key_values, i, 
-                                                                                         text_round=text_round, visual_round=window_size, 
-                                                                                         full_conversation_history=full_conversation_history, 
-                                                                                         prev_generated_ids=prev_generated_ids, 
-                                                                                         assistant_start_bias=assistant_start_bias, 
-                                                                                         assistant_end_bias=assistant_end_bias, 
+        past_key_values, prev_generated_ids, recent_video_window_clips, recent_pixel_values_videos = process_past_kv(past_key_values, i,
+                                                                                         text_round=text_round, visual_round=window_size,
+                                                                                         full_conversation_history=full_conversation_history,
+                                                                                         prev_generated_ids=prev_generated_ids,
+                                                                                         assistant_start_bias=assistant_start_bias,
+                                                                                         assistant_end_bias=assistant_end_bias,
                                                                                          recent_video_window_clips=recent_video_window_clips,
                                                                                          recent_pixel_values_videos=recent_pixel_values_videos,
                                                                                          text_sink=text_sink,
@@ -332,7 +332,7 @@ def streaming_inference(model_path="",
 
         try:
             if from_dataset:
-                current_video_chunk = dataset['conversation'][2*i+1]['content'][1]['video'] 
+                current_video_chunk = dataset['conversation'][2*i+1]['content'][1]['video']
                 video_start = dataset['start_timestamp']  # Start time of this segment itself
                 start_time = video_start + start_time
                 ground_truths.append({'ground_truth':dataset['conversation'][2*i+2]['content'][0]['text'] , 'start_time':start_time, 'end_time':start_time+chunk_duration})
@@ -368,7 +368,7 @@ def streaming_inference(model_path="",
                 {"role": "user", "content": user_content}
                 ]
             text = processor.apply_chat_template(full_conversation_history, tokenize=False, add_generation_prompt=True)
-            
+
         else:
             prompt = f'Time={start_time:.1f}-{start_time+chunk_duration:.1f}s'
 
@@ -393,16 +393,16 @@ def streaming_inference(model_path="",
             padding=True,
             return_tensors="pt",
         ).to(device)
-     
+
         if prev_generated_ids is not None:
             # Because the model's last generated token is <|im_end|>, a new round will add an extra "\n".
             # We must keep that "\n", hence the -1.
             # Special case: (when only one round of text is kept) if the last assistant was removed,
             # then the last token of the previous user will be "\n"
             if prev_generated_ids[:,-1].item()!=TOKEN_IDS["\n"]:
-                inputs['input_ids'] = torch.cat([prev_generated_ids,inputs['input_ids']],dim=1) 
+                inputs['input_ids'] = torch.cat([prev_generated_ids,inputs['input_ids']],dim=1)
             else:
-                inputs['input_ids'] = torch.cat([prev_generated_ids,inputs['input_ids'][:,1:]],dim=1) 
+                inputs['input_ids'] = torch.cat([prev_generated_ids,inputs['input_ids'][:,1:]],dim=1)
             inputs['attention_mask'] = torch.ones_like(inputs['input_ids'])
 
         recent_pixel_values_videos.append(inputs['pixel_values_videos'])
@@ -487,7 +487,7 @@ def streaming_inference(model_path="",
             prev_generated_ids = torch.cat([inputs['input_ids'], torch.tensor(processor(text=[gt_dict[time_key]['phrase']+"<|im_end|>\n"])['input_ids'],device = device)],dim=1)
         assistant_turn = {"role": "assistant", "content": response}
         full_conversation_history.append(assistant_turn)
-            
+
 
         _sync();section_time['POST'] += (time.perf_counter() - _t)
 
@@ -552,7 +552,7 @@ if __name__ == "__main__":
 
     args.add_argument("--gt_json", type=str, default=None)
     args.add_argument("--gt_idx", type=int, default=0)
-    
+
     args = args.parse_args()
 
     if args.output_dir is None:
