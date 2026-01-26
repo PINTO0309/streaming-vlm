@@ -21,6 +21,18 @@ Go to [streamingvlm.hanlab.ai](https://streamingvlm.hanlab.ai) to see more cases
 ## 🛠️ Install
 
 ```bash
+# ffmpeg 7.x must be installed first
+uv sync --all-extras # base + infer + ovo + sft environment
+uv sync # base only
+uv sync --extra infer # base + infer environment
+uv sync --extra ovo # base + ovo environment
+uv sync --extra sft # base + sft environment
+uv sync --extra infer --extra sft # base + infer + sft environment
+
+source .venv/bin/activate
+```
+
+```bash
 ./scripts/env_infer.sh
 ./scripts/env_sft.sh
 ```
@@ -83,7 +95,7 @@ conda activate streamingvlm-sft
 
 ```bash
 conda activate streamingvlm-infer
-./scripts/eval_efficiency.sh  
+./scripts/eval_efficiency.sh
 ```
 
 <p align="center">
@@ -171,13 +183,13 @@ If you find StreamingVLM useful or relevant to your project and research, please
 
 ```bibtex
 @misc{xu2025streamingvlmrealtimeunderstandinginfinite,
-      title={StreamingVLM: Real-Time Understanding for Infinite Video Streams}, 
+      title={StreamingVLM: Real-Time Understanding for Infinite Video Streams},
       author={Ruyi Xu and Guangxuan Xiao and Yukang Chen and Liuning He and Kelly Peng and Yao Lu and Song Han},
       year={2025},
       eprint={2510.09608},
       archivePrefix={arXiv},
       primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2510.09608}, 
+      url={https://arxiv.org/abs/2510.09608},
 }
 ```
 
