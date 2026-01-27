@@ -54,7 +54,8 @@ source .venv/bin/activate
 *You can run inference by the command below.*
 
 ```bash
-uv run python streaming_vlm/inference/inference.py
+uv run python streaming_vlm/inference/inference.py \
+--video_path xxx.mp4
 ```
 
 <details><summary>legacy</summary>
