@@ -63,10 +63,11 @@ source .venv/bin/activate
 # 出力先を指定していなければ output/ 配下に自動で VTT ファイルが作られます（ファイル名は設定に応じて自動生成）。
 # 既定では duration=6000秒 まで処理するため、動画が短い場合は途中でフレーム取得エラーになってループを抜ける想定です。
 # 簡単に言うと、動画を1秒刻みで読み込み→コメント生成→字幕化する実行です。
-# もし「実況以外の質問」や「出力形式変更」をしたい場合は、--query 相当のコード変更や --emit_json などが必要です。
+# --query に質問文・指示を指定します。
 
 uv run python streaming_vlm/inference/inference.py \
---video_path xxx.mp4
+--video_path xxx.mp4 \
+--query "Describe the scene."
 ```
 
 <details><summary>legacy</summary>
