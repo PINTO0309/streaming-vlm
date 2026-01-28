@@ -22,6 +22,7 @@ Go to [streamingvlm.hanlab.ai](https://streamingvlm.hanlab.ai) to see more cases
 
 ```bash
 # ffmpeg 7.x must be installed first
+uv sync
 uv pip install torch==2.7.1
 
 uv sync --all-extras --no-build-isolation # base + infer + ovo + sft environment
