@@ -556,6 +556,7 @@ if __name__ == "__main__":
 
     args.add_argument("--output_dir", type=str)
     args.add_argument("--emit_json", action="store_true", help="逐秒输出 JSON 行到 stdout")
+    args.add_argument("--query", type=str, default="Commentate on this match")
 
     args.add_argument("--test_data_json", type=str, default=None)
     args.add_argument("--test_data_idx", type=int, default=None)

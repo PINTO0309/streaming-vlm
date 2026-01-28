@@ -54,6 +54,17 @@ source .venv/bin/activate
 *You can run inference by the command below.*
 
 ```bash
+# inference.py を使って動画を1秒チャンクでストリーミング推論し、各区間のコメント文を生成して WebVTT字幕ファイルに書き出します。具体的には以下の振る舞いです。
+# --video_path xxx.mp4 を探します（xxx.mp4 が存在しない場合は DATASET_PATH / EVAL_DATASET_PATH / UPLOAD_DATASET_PATH も順に探索し、見つからなければ FileNotFoundError で終了）。
+# 既定で mit-han-lab/StreamingVLM をロード（初回はモデルのダウンロード発生）。
+# 既定の チャンク長は1秒、ウィンドウは16秒分を保持しつつ、毎秒コメントを生成します。
+# 生成は query="Commentate on this match"（試合実況）という既定プロンプトで進みます。
+# 生成結果は標準出力に Time=HH:MM:SS-...: ... 形式で表示され、同時に VTT へ書き込みます。
+# 出力先を指定していなければ output/ 配下に自動で VTT ファイルが作られます（ファイル名は設定に応じて自動生成）。
+# 既定では duration=6000秒 まで処理するため、動画が短い場合は途中でフレーム取得エラーになってループを抜ける想定です。
+# 簡単に言うと、動画を1秒刻みで読み込み→コメント生成→字幕化する実行です。
+# もし「実況以外の質問」や「出力形式変更」をしたい場合は、--query 相当のコード変更や --emit_json などが必要です。
+
 uv run python streaming_vlm/inference/inference.py \
 --video_path xxx.mp4
 ```
