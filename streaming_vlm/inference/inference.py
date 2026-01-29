@@ -231,6 +231,7 @@ def streaming_inference(model_path="",
                         query = "Commentate on this match",
                         repetition_penalty=DEFAULT_REPETITION_PENALTY,
                         max_new_tokens=MAX_TOKEN_PER_DURATION,
+                        show_timing=True,
                         quiet=False,
                         emit_json=False,
                         time_test = False,
@@ -529,17 +530,18 @@ def streaming_inference(model_path="",
         # ------------------------- Print profiling results -----------------
         _sync()
         loop_total = time.perf_counter() - loop_start
-        printq(
-            f"[Loop {i}] total={loop_total:.3f}s | "
-            f"PKV={section_time['PKV']:.3f}s | "
-            f"CHECK={section_time['CHECK']:.3f}s | "
-            f"VIDEO={section_time['VIDEO']:.3f}s | "
-            f"INPUT={section_time['INPUT']:.3f}s | "
-            f"GEN={section_time['GEN']:.3f}s | "
-            f"POST={section_time['POST']:.3f}s",
-            flush=True,
-            quiet=quiet,
-        )
+        if show_timing:
+            printq(
+                f"[Loop {i}] total={loop_total:.3f}s | "
+                f"PKV={section_time['PKV']:.3f}s | "
+                f"CHECK={section_time['CHECK']:.3f}s | "
+                f"VIDEO={section_time['VIDEO']:.3f}s | "
+                f"INPUT={section_time['INPUT']:.3f}s | "
+                f"GEN={section_time['GEN']:.3f}s | "
+                f"POST={section_time['POST']:.3f}s",
+                flush=True,
+                quiet=quiet,
+            )
         if time_test:
             time_results.append(section_time)
         # ============================================================
@@ -574,6 +576,7 @@ if __name__ == "__main__":
     args.add_argument("--recompute", action='store_true')
     args.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE)
     args.add_argument("--max_new_tokens", type=int, default=MAX_TOKEN_PER_DURATION)
+    args.add_argument("--no_timing", action="store_true", help="disable per-loop timing logs")
     # Both None: no truncation
     # One None and the other not: treat None as 0 (keep nothing), so both are applied
     # Both non-None: apply both
@@ -595,4 +598,5 @@ if __name__ == "__main__":
     if args.output_dir is None:
         os.makedirs("output", exist_ok=True)
         args.output_dir = f"output/{args.model_path.replace('/','_')}_viswin{args.window_size}_txtwin{args.text_round}_prvsink{args.text_sink}_prvwin{args.text_sliding_window}_tprt{args.temperature}.vtt"
+    args.show_timing = not args.no_timing
     streaming_inference(**args.__dict__)

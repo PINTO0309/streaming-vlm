@@ -70,7 +70,8 @@ source .venv/bin/activate
 uv run python streaming_vlm/inference/inference.py \
 --video_path "xxx.mp4" \
 --query "Describe the scene." \
---max_new_tokens 80
+--max_new_tokens 80 \
+--no_timing
 ```
 
 <details><summary>legacy</summary>
