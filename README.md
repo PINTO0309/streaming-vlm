@@ -25,6 +25,7 @@ Go to [streamingvlm.hanlab.ai](https://streamingvlm.hanlab.ai) to see more cases
 uv sync
 uv pip install torch==2.7.1 cython==3.2.4
 
+uv sync --no-build-isolation
 uv sync --all-extras --no-build-isolation # base + infer + ovo + sft environment
 uv sync --no-build-isolation # base only
 uv sync --extra infer --no-build-isolation # base + infer environment
