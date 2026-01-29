@@ -68,9 +68,11 @@ source .venv/bin/activate
 # --query に質問文・指示を指定します。
 
 uv run python streaming_vlm/inference/inference.py \
---video_path "xxx.mp4" \
---query "Describe the scene." \
---max_new_tokens 80 \
+--video_path "test.mp4" \
+--previous_text "Now let's take a look at some of the notable events that took place in this room." \
+--query "What is the person doing?" \
+--chunk_duration 4 \
+--max_new_tokens 100 \
 --no_timing \
 --no_ellipsis \
 --no_past_kv
