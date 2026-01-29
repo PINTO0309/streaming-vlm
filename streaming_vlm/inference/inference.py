@@ -234,6 +234,7 @@ def streaming_inference(model_path="",
                         show_timing=True,
                         show_past_kv=True,
                         show_ellipsis=True,
+                        vtt_console_log=False,
                         quiet=False,
                         emit_json=False,
                         time_test = False,
@@ -510,9 +511,12 @@ def streaming_inference(model_path="",
                 display_response = display_response[:-4]
             elif display_response.endswith("..."):
                 display_response = display_response[:-3]
+        plain_log = f"Time={hms_start}-{hms_end}: {display_response}"
         msg = f"Time={hms_start}-{hms_end}: \033[1m\033[34m{display_response}\033[0m"
         if show_past_kv:
-            msg += f" past_key_values: {past_key_values.get_seq_length() if past_key_values is not None else 0}"
+            pkv_str = f" past_key_values: {past_key_values.get_seq_length() if past_key_values is not None else 0}"
+            msg += pkv_str
+            plain_log += pkv_str
         printq(msg, flush=True, quiet=quiet)
         if emit_json:
             try:
@@ -562,7 +566,10 @@ def streaming_inference(model_path="",
         ts_end = sec2ts(start_time + chunk_duration)
         if output_dir is not None:
             with open_vtt(output_dir) as vf:
-                vf.write(f"{ts_start} --> {ts_end}\n Infer Time: {loop_total:.3f}s\n {response}\n\n")
+                if vtt_console_log:
+                    vf.write(f"{ts_start} --> {ts_end}\n {plain_log}\n\n")
+                else:
+                    vf.write(f"{ts_start} --> {ts_end}\n Infer Time: {loop_total:.3f}s\n {response}\n\n")
     if output_dir is not None:
         printq(f"\n✅ Subtitles saved to: {output_dir}\n", quiet=quiet)
     if time_test:
@@ -590,6 +597,7 @@ if __name__ == "__main__":
     args.add_argument("--no_timing", action="store_true", help="disable per-loop timing logs")
     args.add_argument("--no_past_kv", action="store_true", help="hide past_key_values in console output")
     args.add_argument("--no_ellipsis", action="store_true", help="hide trailing ellipsis in console output")
+    args.add_argument("--vtt_console_log", action="store_true", help="write console log line to WEBVTT instead of raw response")
     # Both None: no truncation
     # One None and the other not: treat None as 0 (keep nothing), so both are applied
     # Both non-None: apply both
@@ -618,4 +626,5 @@ if __name__ == "__main__":
     args_dict.pop("no_timing", None)
     args_dict.pop("no_past_kv", None)
     args_dict.pop("no_ellipsis", None)
+    # vtt_console_log is used directly by streaming_inference
     streaming_inference(**args_dict)
