@@ -599,4 +599,6 @@ if __name__ == "__main__":
         os.makedirs("output", exist_ok=True)
         args.output_dir = f"output/{args.model_path.replace('/','_')}_viswin{args.window_size}_txtwin{args.text_round}_prvsink{args.text_sink}_prvwin{args.text_sliding_window}_tprt{args.temperature}.vtt"
     args.show_timing = not args.no_timing
-    streaming_inference(**args.__dict__)
+    args_dict = vars(args)
+    args_dict.pop("no_timing", None)
+    streaming_inference(**args_dict)
