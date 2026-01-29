@@ -14,7 +14,7 @@ dependencies = [
     "annotated-types==0.7.0",
     "anyio==4.10.0",
     "attrs==25.3.0",
-    "av==14.4.0",
+    "av==13.1.0",
     "blessed==1.21.0",
     "block-sparse-attn",
     "certifi==2025.8.3",
