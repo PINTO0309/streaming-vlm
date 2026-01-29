@@ -397,12 +397,16 @@ def streaming_inference(model_path="",
             text = processor.apply_chat_template([{"role": "user", "content": user_content}], tokenize=False, add_generation_prompt=True)
             text = '\n' + text[SYSTEM_PROMPT_OFFSET:]
 
-        inputs = processor(
-            text=[text],
-            videos=recent_video_window_clips[-1],
-            padding=True,
-            return_tensors="pt",
-        ).to(device)
+        processor_kwargs = {
+            "text": [text],
+            "videos": recent_video_window_clips[-1],
+        }
+        if hasattr(processor, "_merge_kwargs"):
+            processor_kwargs["text_kwargs"] = {"padding": True, "return_tensors": "pt"}
+        else:
+            processor_kwargs["padding"] = True
+            processor_kwargs["return_tensors"] = "pt"
+        inputs = processor(**processor_kwargs).to(device)
 
         if prev_generated_ids is not None:
             # Because the model's last generated token is <|im_end|>, a new round will add an extra "\n".
