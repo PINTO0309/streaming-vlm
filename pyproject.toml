@@ -3,7 +3,7 @@ name = "streaming-vlm"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = "==3.13.11"
+requires-python = "==3.11.14"
 dependencies = [
     "absl-py==2.3.1",
     "accelerate==1.10.1",
