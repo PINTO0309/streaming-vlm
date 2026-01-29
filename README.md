@@ -68,8 +68,9 @@ source .venv/bin/activate
 # --query に質問文・指示を指定します。
 
 uv run python streaming_vlm/inference/inference.py \
---video_path xxx.mp4 \
---query "Describe the scene."
+--video_path "xxx.mp4" \
+--query "Describe the scene." \
+--max_new_tokens 80
 ```
 
 <details><summary>legacy</summary>

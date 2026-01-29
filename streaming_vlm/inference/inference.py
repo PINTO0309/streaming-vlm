@@ -230,6 +230,7 @@ def streaming_inference(model_path="",
                         duration = TOTAL_VIDEO_DURATION,
                         query = "Commentate on this match",
                         repetition_penalty=DEFAULT_REPETITION_PENALTY,
+                        max_new_tokens=MAX_TOKEN_PER_DURATION,
                         quiet=False,
                         emit_json=False,
                         time_test = False,
@@ -461,7 +462,7 @@ def streaming_inference(model_path="",
                 inputs['second_per_grid_ts'] = streaming_args.second_per_grid_ts[-len(recent_pixel_values_videos):]
             outputs = model.generate(
                 **inputs,
-                max_new_tokens=MAX_TOKEN_PER_DURATION,
+                max_new_tokens=max_new_tokens,
                 use_cache=True,
                 return_dict_in_generate=True,
                 do_sample=True,
@@ -474,7 +475,7 @@ def streaming_inference(model_path="",
             outputs = model.generate(
                 **inputs,
                 past_key_values=past_key_values,
-                max_new_tokens=MAX_TOKEN_PER_DURATION,
+                max_new_tokens=max_new_tokens,
                 use_cache=True,
                 return_dict_in_generate=True,
                 do_sample=True,
@@ -572,6 +573,7 @@ if __name__ == "__main__":
     args.add_argument("--skip_first_chunk", type=int, default=0)
     args.add_argument("--recompute", action='store_true')
     args.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE)
+    args.add_argument("--max_new_tokens", type=int, default=MAX_TOKEN_PER_DURATION)
     # Both None: no truncation
     # One None and the other not: treat None as 0 (keep nothing), so both are applied
     # Both non-None: apply both
