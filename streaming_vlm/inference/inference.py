@@ -324,8 +324,13 @@ def streaming_inference(model_path="",
     if output_dir is not None:
         if os.path.exists(output_dir):
             os.remove(output_dir)
-        with open_vtt(output_dir):  # Write WEBVTT header
-            pass
+        if vtt_console_log:
+            # Create an empty file without WEBVTT header for raw console log output.
+            with open(output_dir, "w", encoding="utf-8"):
+                pass
+        else:
+            with open_vtt(output_dir):  # Write WEBVTT header
+                pass
         printq(f"Subtitles will be written to: {output_dir}", quiet=quiet)
     ##############################################################################
 
@@ -545,15 +550,19 @@ def streaming_inference(model_path="",
         # ------------------------- Print profiling results -----------------
         _sync()
         loop_total = time.perf_counter() - loop_start
+        timing_log = None
         if show_timing:
-            printq(
+            timing_log = (
                 f"[Loop {i}] total={loop_total:.3f}s | "
                 f"PKV={section_time['PKV']:.3f}s | "
                 f"CHECK={section_time['CHECK']:.3f}s | "
                 f"VIDEO={section_time['VIDEO']:.3f}s | "
                 f"INPUT={section_time['INPUT']:.3f}s | "
                 f"GEN={section_time['GEN']:.3f}s | "
-                f"POST={section_time['POST']:.3f}s",
+                f"POST={section_time['POST']:.3f}s"
+            )
+            printq(
+                timing_log,
                 flush=True,
                 quiet=quiet,
             )
@@ -565,10 +574,11 @@ def streaming_inference(model_path="",
         ts_start = sec2ts(start_time)
         ts_end = sec2ts(start_time + chunk_duration)
         if output_dir is not None:
-            with open_vtt(output_dir) as vf:
-                if vtt_console_log:
-                    vf.write(f"{ts_start} --> {ts_end}\n {plain_log}\n\n")
-                else:
+            if vtt_console_log:
+                with open(output_dir, "a", encoding="utf-8") as vf:
+                    vf.write(f"{plain_log}\n")
+            else:
+                with open_vtt(output_dir) as vf:
                     vf.write(f"{ts_start} --> {ts_end}\n Infer Time: {loop_total:.3f}s\n {response}\n\n")
     if output_dir is not None:
         printq(f"\n✅ Subtitles saved to: {output_dir}\n", quiet=quiet)
