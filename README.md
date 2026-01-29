@@ -74,7 +74,6 @@ uv run python streaming_vlm/inference/inference.py \
 --no_timing \
 --no_ellipsis \
 --no_past_kv
-
 ```
 
 <details><summary>legacy</summary>
