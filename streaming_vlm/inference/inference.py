@@ -232,6 +232,8 @@ def streaming_inference(model_path="",
                         repetition_penalty=DEFAULT_REPETITION_PENALTY,
                         max_new_tokens=MAX_TOKEN_PER_DURATION,
                         show_timing=True,
+                        show_past_kv=True,
+                        show_ellipsis=True,
                         quiet=False,
                         emit_json=False,
                         time_test = False,
@@ -502,7 +504,16 @@ def streaming_inference(model_path="",
         past_key_values = outputs.past_key_values
         hms_start = time.strftime('%H:%M:%S', time.gmtime(int(start_time)))
         hms_end = time.strftime('%H:%M:%S', time.gmtime(int(start_time + chunk_duration)))
-        printq(f"Time={hms_start}-{hms_end}: \033[1m\033[34m{response}\033[0m", f'past_key_values: {past_key_values.get_seq_length() if past_key_values is not None else 0}', flush=True, quiet=quiet)
+        display_response = response
+        if not show_ellipsis:
+            if display_response.endswith(" ..."):
+                display_response = display_response[:-4]
+            elif display_response.endswith("..."):
+                display_response = display_response[:-3]
+        msg = f"Time={hms_start}-{hms_end}: \033[1m\033[34m{display_response}\033[0m"
+        if show_past_kv:
+            msg += f" past_key_values: {past_key_values.get_seq_length() if past_key_values is not None else 0}"
+        printq(msg, flush=True, quiet=quiet)
         if emit_json:
             try:
                 if emit_json:
@@ -577,6 +588,8 @@ if __name__ == "__main__":
     args.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE)
     args.add_argument("--max_new_tokens", type=int, default=MAX_TOKEN_PER_DURATION)
     args.add_argument("--no_timing", action="store_true", help="disable per-loop timing logs")
+    args.add_argument("--no_past_kv", action="store_true", help="hide past_key_values in console output")
+    args.add_argument("--no_ellipsis", action="store_true", help="hide trailing ellipsis in console output")
     # Both None: no truncation
     # One None and the other not: treat None as 0 (keep nothing), so both are applied
     # Both non-None: apply both
@@ -599,6 +612,10 @@ if __name__ == "__main__":
         os.makedirs("output", exist_ok=True)
         args.output_dir = f"output/{args.model_path.replace('/','_')}_viswin{args.window_size}_txtwin{args.text_round}_prvsink{args.text_sink}_prvwin{args.text_sliding_window}_tprt{args.temperature}.vtt"
     args.show_timing = not args.no_timing
+    args.show_past_kv = not args.no_past_kv
+    args.show_ellipsis = not args.no_ellipsis
     args_dict = vars(args)
     args_dict.pop("no_timing", None)
+    args_dict.pop("no_past_kv", None)
+    args_dict.pop("no_ellipsis", None)
     streaming_inference(**args_dict)

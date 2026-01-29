@@ -71,7 +71,10 @@ uv run python streaming_vlm/inference/inference.py \
 --video_path "xxx.mp4" \
 --query "Describe the scene." \
 --max_new_tokens 80 \
---no_timing
+--no_timing \
+--no_ellipsis \
+--no_past_kv
+
 ```
 
 <details><summary>legacy</summary>
