@@ -92,7 +92,26 @@ def load_model_and_processor(model_path, model_base = 'Qwen2_5'):
         )
         model = convert_qwen2_to_streaming(model)
         processor = AutoProcessor.from_pretrained(model_path, use_fast=False)
+    _filter_processor_videos_kwargs(processor)
     return model, processor
+
+def _filter_processor_videos_kwargs(processor):
+    if not hasattr(processor, "_merge_kwargs") or not hasattr(processor, "video_processor"):
+        return
+    valid = getattr(processor.video_processor, "valid_kwargs", None)
+    if not valid or not hasattr(valid, "__annotations__"):
+        return
+    valid_keys = set(valid.__annotations__.keys()) | {"return_tensors"}
+    orig_merge = processor._merge_kwargs
+    def _merge_kwargs_filtered(self, ModelProcessorKwargs, tokenizer_init_kwargs=None, **kwargs):
+        output_kwargs = orig_merge(ModelProcessorKwargs, tokenizer_init_kwargs=tokenizer_init_kwargs, **kwargs)
+        videos_kwargs = output_kwargs.get("videos_kwargs")
+        if isinstance(videos_kwargs, dict):
+            for key in list(videos_kwargs.keys()):
+                if key not in valid_keys:
+                    videos_kwargs.pop(key, None)
+        return output_kwargs
+    processor._merge_kwargs = _merge_kwargs_filtered.__get__(processor, processor.__class__)
 
 def process_past_kv(past_key_values, i, text_round, visual_round, full_conversation_history, prev_generated_ids,
                     assistant_start_bias, assistant_end_bias, recent_video_window_clips, recent_pixel_values_videos,
@@ -234,6 +253,7 @@ def streaming_inference(model_path="",
             model = convert_qwen2_5_to_streaming(model)
         elif model_base == 'Qwen2':
             model = convert_qwen2_to_streaming(model)
+        _filter_processor_videos_kwargs(processor)
 
     assistant_start_bias = len(processor(text="<|im_start|>assistant\n")['input_ids'][0])
     assistant_end_bias = len(processor(text=" ...<|im_end|>")['input_ids'][0])
